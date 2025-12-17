@@ -1,2 +1,0 @@
-# C-Note
-C++ Note
