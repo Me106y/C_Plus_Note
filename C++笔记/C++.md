@@ -1235,6 +1235,25 @@ inline 返回类型 类名:成员函数名(参数列表)
 
 <img src="assets/image-20251216200639646.png" alt="image-20251216200639646" style="zoom:67%;" />
 
+```c++
+//结构体默认权限为public，如果换成class会报错
+struct person
+{
+	string name;
+	int age;
+};
+int main()
+{
+	person p;
+	p.name = "heiren";
+	p.age = 666;
+	cout <<"name="<< p.name <<" age="<< p.age << endl;
+	return 0;
+}
+```
+
+
+
 ###### 类成员的访问权限以及类的封装
 
 - 和Java、C#不同的是，C++中public、private、protected只能修饰类的成员，不能修饰类，C++中的类没有共有私有之分
@@ -1341,7 +1360,7 @@ Person::Person(int a, string s):age(a),name(s)
 
 ```
 
-拷贝构造函数
+###### 拷贝构造函数
 
 ```c++
 类名::类名(类名&对象名)
@@ -1630,10 +1649,14 @@ class xxx
 
 ~~~c++
 //1.将非成员函数声明为友元函数
+#include <iostream>
+#include <string>
+using  namespace std;
+
 class Person
 {
 public:
-	Person(int = 0,string = "张三");
+	Person(int = 0,string = "张三");//带默认参数的构造函数
 	friend void show(Person *pper);//将show声明为友元函数
 private:
 	int age;
@@ -1652,56 +1675,1080 @@ int main()
 {
 	Person *pp = new Person(234,"yar");
 	show(pp);
-	system("pause");
-	return 0;
-}
 
-//2.将其他类的成员函数声明为友元函数
-//person中的成员函数可以访问MobilePhone中的私有成员变量
-class MobilePhone;//提前声明
-//声明Person类
-class Person
-{
-public:
-	Person(int = 0,string = "张三");
-	void show(MobilePhone *mp);
-private:
-	int age;
-	string name;
-};
-//声明MobilePhone类
-class MobilePhone
-{
-public:
-	MobilePhone();
-	friend void Person::show(MobilePhone *mp);
-private:
-	int year;
-	int memory;
-	string name;
-};
-MobilePhone::MobilePhone()
-{
-	year = 1;
-	memory = 4;
-	name = "iphone 6s";
-}
-Person::Person(int a, string s):age(a),name(s)
-{
-	cout << a << " " << s << endl;
-}
-void Person::show(MobilePhone *mp)
-{
-	cout << mp->year << "年  " << mp->memory << "G " << mp->name << endl;
-}
-int main()
-{
-	Person *pp = new Person(234,"yar");
-	MobilePhone *mp = new MobilePhone;
-	pp->show(mp);
-	system("pause");
+    Person *p1 = new Person();
+    show(p1);
 	return 0;
+
+    cout << p1.age << endl; //错误，age是私有成员
 }
 
 ~~~
+
+```c++
+#include <iostream>
+#include <string>
+using  namespace std;
+
+class Person2; // 提前声明
+
+class Person1 {
+public:
+    Person1(string n, int a) : name1(n), age1(a) {};
+    void display(Person2 *p2); //声明一个用于访问Person2私有成员的函数 
+private:
+    string name1;
+    int age1;
+};
+
+class Person2 {
+public:
+    Person2(string n, int a) : name2(n), age2(a) {}
+    friend void Person1::display(Person2 *p2);//声明上面要访问自己私有成员的函数为友元函数
+private:
+    string name2;
+    int age2;
+};
+
+void Person1::display(Person2 *p2) {
+    cout << "Name: " << p2->name2 << ", Age: " << p2->age2 << endl;
+}
+
+
+int main() {
+    Person1 p("Alice", 30);
+    Person2 *q = new Person2("Bob", 25);
+    p.display(q);
+    return 0;
+}
+```
+
+
+
+> [!IMPORTANT]
+>
+> ```
+> 1.Person2要提前声明
+> 2.在Person1中声明一个要访问Person2的函数
+> 3.在Person2中声明Person1中要访问自己的函数为友元函数
+> 4.友元函数通过对象指针进行访问私有成员
+> ```
+
+
+
+##### 继承和派生
+
+###### 继承和派生概述
+
+继承就是再一个已有类的基础上建立一个新类，已有的类称基类或父类，新建立的类称为派生类和子类；派生和继承是一个概念，角度不同而已，继承是儿子继承父亲的产业，派生是父亲把产业传承给儿子。
+
+- 一个基类可以派生出多个派生类，一个派生类可以继承多个基类
+  派生类的声明：
+
+```c++
+//继承方式为可选项，默认为private，还有public,protected
+class 派生类名：[继承方式]基类名
+{
+	派生类新增加的成员声明;
+};
+```
+
+继承方式：
+
+- public-基类的public成员和protected成员的访问属性保持不变，私有成员不可见。
+- private-基类的public成员和protected成员成为private成员,只能被派生类的成员函数直接访问，私有成员不可见。
+- protected-基类的public成员和protected成员成为protected成员,只能被派生类的成员函数直接访问，私有成员不可见。
+  
+
+![image-20251218180919234](assets/image-20251218180919234.png)
+
+- 利用using关键字可以改变基类成员再派生类中的访问权限；using只能修改基类中public和protected成员的访问权限。
+
+```c++
+class Base
+{
+public:
+	void show();
+protected:
+	int aa;
+	double dd;
+};
+void Base::show(){
+}
+class Person:public Base
+{
+public:
+	using Base::aa;//将基类的protected成员变成public
+	using Base::dd;//将基类的protected成员变成public
+private:
+	using Base::show;//将基类的public成员变成private
+	string name;
+};
+int main()
+{
+	Person *p = new Person();
+	p->aa = 12;
+	p->dd = 12.3;
+	p->show();//出错
+	delete p;
+	return 0;
+}
+
+```
+
+派生类的构造函数和析构函数
+
+- 先执行基类的构造函数，随后执行派生类的构造函数
+- 先执行派生类的析构函数，再执行基类的析构函数。
+- 派生类的构造函数：==`派生类名(总参数列表)：基类名(基类参数列表),子对象名1(参数列表){构造函数体;}`==
+
+```c++
+class Base
+{
+public:
+	Base(int, double);
+	~Base();
+private:
+	int aa;
+	double dd;
+};
+Base::Base(int a, double d) :aa(a), dd(d)
+{
+	cout << "Base Class 构造函数!!!" << endl;
+}
+Base::~Base()
+{
+	cout << "Base Class 析构函数!!!" << endl;
+}
+class Person:public Base
+{
+public:
+	Person(int,double,string);
+	~Person();
+private:
+	string name;
+};
+Person::Person(int a,double d,string str):Base(a,d),name(str)
+{
+	cout << "Person Class 构造函数!!!" << endl;
+}
+Person::~Person()
+{
+	cout << "Person Class 析构函数!!!" << endl;
+}
+int main()
+{
+	cout << "创建Person对象..." << endl;
+	Person *p = new Person(1,2,"yar");
+	cout << "删除Person对象...." << endl;
+	delete p;
+	system("pause");
+	return 0;
+}
+
+```
+
+<img src="assets/image-20251218182040548.png" alt="image-20251218182040548" style="zoom: 50%;" />
+
+###### 多继承
+
+一个派生类可以同时继承多个基类
+
+多继承容易让代码逻辑复杂、思路混乱，一直备受争议，中小型项目中较少使用，后来的 Java、C#、PHP 等干脆取消了多继承。
+
+多重继承派生类声明的一般形式：
+
+```c++
+class 派生类名:继承方式1 基类1,继承方式2 基类2
+{
+	派生类主体;
+};
+```
+
+多重继承派生类的构造函数:
+
+```c++
+派生类名(总参数列表)：基类名1(基类参数列表1),基类名2(基类参数列表2),
+子对象名1,...(参数列表)
+{
+	构造函数体;
+}；
+```
+
+二义性问题：多个基类中有同名成员，出现访问不唯一的问题。
+
+- 1.`类名::同名成员名;`
+- 2.派生类定义同名成员，访问的就是派生类同名成员。
+
+
+
+###### 虚基类
+
+c++引入虚基类使得派生类再继承间接共同基类时只保留一份同名成员。
+
+- 虚继承的目的是让某个类做出声明，承诺愿意共享它的基类。其中，这个被共享的基类就称为虚基类（Virtual Base Class）。
+- 派生类的 同名成员 比虚基类的 优先级更高
+  虚基类的声明：`class 派生类名:virtual 继承方式 基类名`
+
+```c++
+#include <iostream>
+#include <string>
+using  namespace std;
+
+class A {
+public:
+    int value;  // 同名成员变量
+    A() : value(10) {
+        cout << "A构造函数，value = " << value << endl;
+    }
+};
+
+// B虚继承A
+class B : virtual public A {
+public:
+    B() {
+        value = 20;  // 修改A的value
+        cout << "B构造函数，设置value = " << value << endl;
+    }
+};
+
+// C虚继承A
+class C : virtual public A {
+public:
+    C() {
+        value = 30;  // 也修改A的value（同一个！）
+        cout << "C构造函数，设置value = " << value << endl;
+    }
+};
+
+// D继承B和C
+class D : public B, public C {
+public:
+    D() {
+        cout << "D构造函数，value = " << value << endl;
+    }
+    
+    void show() {
+        cout << "\n=== 访问value ===" << endl;
+        cout << "直接访问value: " << value << endl;  // 访问A的value
+        
+        // 查看不同路径的value（都是同一个）
+        cout << "A::value: " << A::value << endl;
+        cout << "B::value: " << B::value << endl;
+        cout << "C::value: " << C::value << endl;
+    }
+};
+
+int main() {
+    D d;
+    d.show();
+    
+    // 修改测试
+    cout << "\n=== 修改测试 ===" << endl;
+    d.value = 100;  // 直接修改
+    cout << "修改后直接访问: " << d.value << endl;
+    cout << "通过B访问: " << d.B::value << endl;
+    cout << "通过C访问: " << d.C::value << endl;
+    
+    return 0;
+}
+
+```
+
+<img src="assets/image-20251218184909993.png" alt="image-20251218184909993" style="zoom:67%;" />
+
+##### 多态和虚函数
+
+###### 向上转型
+
+数据类型的转换，编译器会将小数部分直接丢掉（不是四舍五入）
+
+```c++
+int a = 66.9;
+printf("%d\n", a);//66
+float b = 66;
+printf("%f\n", b);//66.000000
+```
+
+- 只能将将派生类赋值给基类（C++中称为向上转型）： 派生类对象赋值给基类对象、将派生类指针赋值给基类指针、将派生类引用赋值给基类引用
+- 派生类对象赋值给基类对象，舍弃派生类新增的成员；派生类指针赋值给基类指针，没有拷贝对象的成员，也没有修改对象本身的数据，仅仅是改变了指针的指向；派生类引用赋值给基类引用，和指针的一样。
+  
+
+==上转型后通过基类的对象、指针、引用只能访问从基类继承过去的成员（包括成员变量和成员函数），不能访问派生类新增的成员==
+
+
+
+###### 多态
+
+不同的对象可以使用同一个函数名调用不同内容的函数
+
+多态分为两类
+
+- 静态多态：==函数重载==和==运算符重载==属于静态多态，复用函数名
+- 动态多态：==派生类==和==虚函数==实现运行时多态
+
+静态多态和动态多态区别：
+
+- 静态多态的函数地址早绑定 - 编译阶段确定函数地址
+- 动态多态的函数地址晚绑定 - 运行阶段确定函数地址
+
+**编译时多态（静态多态）**
+
+```c++
+#include <iostream>
+using namespace std;
+
+// 函数重载 - 编译时多态
+class Calculator {
+public:
+    // 同名函数，参数不同
+    int add(int a, int b) {
+        cout << "整数相加: ";
+        return a + b;
+    }
+    
+    double add(double a, double b) {
+        cout << "浮点数相加: ";
+        return a + b;
+    }
+    
+    string add(string a, string b) {
+        cout << "字符串拼接: ";
+        return a + b;
+    }
+};
+
+// 运算符重载 - 编译时多态
+class Vector {
+public:
+    int x, y;
+    
+    Vector(int x, int y) : x(x), y(y) {}
+    
+    // 重载+运算符
+    Vector operator+(const Vector& other) {
+        return Vector(x + other.x, y + other.y);
+    }
+    
+    // 重载<<运算符
+    friend ostream& operator<<(ostream& os, const Vector& v) {
+        os << "(" << v.x << ", " << v.y << ")";
+        return os;
+    }
+};
+
+int main() {
+    Calculator calc;
+    cout << calc.add(1, 2) << endl;      // 调用int版本
+    cout << calc.add(1.5, 2.5) << endl;  // 调用double版本
+    cout << calc.add("Hello", " World") << endl; // 调用string版本
+    
+    Vector v1(1, 2), v2(3, 4);
+    Vector v3 = v1 + v2;  // 运算符重载
+    cout << v1 << " + " << v2 << " = " << v3 << endl;
+    
+    return 0;
+}
+```
+
+**运行时多态（动态多态）**
+
+```c++
+#include <iostream>
+using namespace std;
+
+// 基类 - 定义接口
+class Animal {
+public:
+    // 虚函数 - 实现多态的关键
+    virtual void speak() const {
+        cout << "动物发出声音" << endl;
+    }
+    
+    virtual ~Animal() {}  // 虚析构函数
+};
+
+// 派生类1
+class Dog : public Animal {
+public:
+    void speak() const override {  // 重写基类虚函数
+        cout << "汪汪汪！" << endl;
+    }
+    
+    void wagTail() {
+        cout << "摇尾巴" << endl;
+    }
+};
+
+// 派生类2
+class Cat : public Animal {
+public:
+    void speak() const override {
+        cout << "喵喵喵！" << endl;
+    }
+    
+    void scratch() {
+        cout << "挠痒痒" << endl;
+    }
+};
+
+// 派生类3
+class Bird : public Animal {
+public:
+    void speak() const override {
+        cout << "叽叽喳喳！" << endl;
+    }
+    
+    void fly() {
+        cout << "展翅高飞" << endl;
+    }
+};
+
+void makeAnimalSpeak(const Animal& animal) {
+    animal.speak();  // 同一调用，不同行为
+}
+
+int main() {
+    Dog dog;
+    Cat cat;
+    Bird bird;
+    
+    cout << "=== 直接调用 ===" << endl;
+    dog.speak();  // 汪汪汪！
+    cat.speak();  // 喵喵喵！
+    bird.speak(); // 叽叽喳喳！
+    
+    cout << "\n=== 通过基类指针调用 ===" << endl;
+    Animal* animals[] = {&dog, &cat, &bird};
+    
+    for (int i = 0; i < 3; i++) {
+        animals[i]->speak();  // 运行时决定调用哪个speak()
+    }
+    
+    cout << "\n=== 通过基类引用调用 ===" << endl;
+    makeAnimalSpeak(dog);   // 汪汪汪！
+    makeAnimalSpeak(cat);   // 喵喵喵！
+    makeAnimalSpeak(bird);  // 叽叽喳喳！
+    
+    return 0;
+}
+```
+
+###### 虚函数
+
+实现程序多态性的一个重要手段，使用基类对象指针访问派生类对象的同名函数
+
+- 将基类中的函数声明为虚函数，派生类中的同名函数自动为虚函数。
+- 声明形式：`virtual 函数类型 函数名 (参数列表);`
+- ==构造函数不能声明为虚函数，析构函数可以声明为虚函数。==
+
+```c++
+#include <iostream>
+#include <string>
+using  namespace std;
+
+class  A
+{
+public:
+	virtual void show()
+	{
+		cout << "A show" << endl;
+	}
+};
+class B:  public A
+{
+public:
+	void show()
+	{
+		cout << "B show" << endl;
+	}
+};
+
+class C : public A{
+public:
+    void show()
+    {
+        cout << "C show" << endl;
+    }
+};
+
+int main()
+{
+	B b;
+	b.show();//B show
+	A *pA = &b;
+	pA->show();//B show 如果show方法前没用virtual声明为虚函数，这里会输出A show
+  C c;
+  A *pA2 = &c;
+  pA2->show();//C show
+	return 0;
+}
+```
+
+###### 纯虚函数
+
+在基类中不执行具体的操作，只为派生类提供统一结构的虚函数，将其声明为虚函数。
+
+```c++
+纯虚函数语法：
+virtual 返回值类型 函数名（参数列表）= 0；
+```
+
+```c++
+class  A
+{
+public:
+	virtual void show() = 0;
+};
+class B:  public A
+{
+public:
+	void show()
+	{
+		cout << "B show" << endl;
+	}
+};
+```
+
+抽象类：包含纯虚函数的类称为抽象类。由于纯虚函数不能被调用，所以不能利用抽象类创建对象，又称抽象基类。
+
+抽象类特点：
+
+- 无法实例化对象
+- 子类必须重写抽象类中的纯虚函数，否则也属于抽象类
+
+###### 虚析构和纯虚析构
+
+多态使用时，如果子类中有属性开辟到堆区，那么父类指针在释放时无法调用到子类的析构代码
+
+解决方案：将父类中的析构函数改为==虚析构==或者==纯虚析构==
+
+虚析构和纯虚析构共性：
+
+- 可以解决父类指针释放子类对象
+- 都需要有具体的函数实现
+
+虚析构和纯虚析构区别：
+
+- 如果是纯虚析构，该类属于抽象类，无法实例化对象
+
+<img src="assets/image-20251219113352476.png" alt="image-20251219113352476" style="zoom: 50%;" />
+
+虚函数案例
+
+```c++
+#include <iostream>
+using namespace std;
+
+class Animal {
+protected:
+    string name;
+    int age;
+public:
+    Animal(string n, int a) : name(n), age(a) {}
+    
+    // 虚析构函数 - 因为Animal可能被继承
+    virtual ~Animal() {
+        cout << "Animal析构: " << name << endl;  // 这里输出的！
+    }
+    
+    void eat() {
+        cout << name << "在吃东西" << endl;
+    }
+    
+    virtual void makeSound() {
+        cout << name << "发出声音" << endl;
+    }
+};
+
+class SimpleAnimal : public Animal {
+public:
+    SimpleAnimal(string n, int a) : Animal(n, a) {}
+    
+    ~SimpleAnimal() override {
+        cout << "SimpleAnimal析构" << endl;
+    }
+};
+
+int main() {
+    // Animal可以直接实例化
+    Animal pet("宠物", 2);
+    pet.eat();
+    
+    // 也可以通过基类指针使用
+    Animal* animal = new SimpleAnimal("小动物", 1);
+    delete animal;  // ✅ 正确调用子类析构函数
+    
+    return 0;
+}
+```
+
+<img src="assets/image-20251219114626671.png" alt="image-20251219114626671" style="zoom:50%;" />
+
+> [!IMPORTANT]
+>
+> **当父类的析构函数是虚函数时：**
+>
+> 1. 用父类指针指向子类对象
+> 2. 释放该指针时（`delete`）
+> 3. **先调用子类的析构函数**
+> 4. **再调用父类的析构函数**
+
+
+
+纯虚函数案例：
+
+```c++
+#include <iostream>
+#include <string>
+using  namespace std;
+
+
+class Animal {
+public:
+    Animal() {
+        cout << "Animal构造函数" << endl;
+    }
+    
+    // 纯虚析构函数 - 注意这里！
+    virtual ~Animal() = 0;  // 声明为纯虚
+    
+    virtual void speak() = 0;  // 普通纯虚函数
+};
+
+// 纯虚析构函数必须提供实现！
+Animal::~Animal() {
+    cout << "Animal纯虚析构函数（实际被调用了！）" << endl;
+}
+
+class Dog : public Animal {
+private:
+    string* namePtr;
+public:
+    Dog(string name) {
+        namePtr = new string(name);
+        cout << "Dog构造函数: " << *namePtr << endl;
+    }
+    
+    ~Dog() override {
+        cout << "Dog析构函数开始，名字: " << *namePtr << endl;
+        delete namePtr;
+        cout << "Dog析构函数结束" << endl;
+    }
+    
+    void speak() override {
+        cout << *namePtr << "说: 汪汪！" << endl;
+    }
+};
+
+int main() {
+    cout << "=== 测试纯虚析构函数的调用顺序 ===" << endl;
+    
+    Animal* pet = new Dog("小黑");
+    pet->speak();
+    
+    cout << "\n删除对象..." << endl;
+    delete pet;  // 会发生什么？
+    
+    return 0;
+}
+```
+
+<img src="assets/image-20251219115601527.png" alt="image-20251219115601527" style="zoom:50%;" />
+
+> [!IMPORTANT]
+>
+> 普通纯虚函数可以不实现（使用父类），纯虚析构函数必须实现（使用父类）
+
+```c++
+#include <iostream>
+using namespace std;
+
+class Animal {
+public:
+    // 纯虚函数 - 父类不提供实现
+    virtual void speak() = 0;  // ✅ 父类可以不实现
+    
+    virtual void eat() {       // 普通虚函数，有默认实现
+        cout << "动物在吃东西" << endl;
+    }
+    
+    virtual ~Animal() {}
+};
+
+// ❌ 错误：尝试为纯虚函数提供实现是不必要的
+// void Animal::speak() { }  // 可以但不必须
+
+class Dog : public Animal {
+public:
+    // ✅ 子类必须实现纯虚函数
+    void speak() override {
+        cout << "汪汪！" << endl;
+    }
+    
+    // 可以选择重写eat()，也可以使用父类的默认实现
+};
+
+class Cat : public Animal {
+public:
+    // ✅ 子类必须实现纯虚函数
+    void speak() override {
+        cout << "喵喵！" << endl;
+    }
+    
+    // 重写eat()
+    void eat() override {
+        cout << "猫在吃鱼" << endl;
+    }
+};
+
+// ❌ 错误：没有实现所有纯虚函数的类也是抽象类
+class AbstractBird : public Animal {
+    // 没有实现speak() → 这个类也是抽象类
+public:
+    void fly() {
+        cout << "鸟儿在飞" << endl;
+    }
+};
+
+// ✅ 正确：实现纯虚函数后成为具体类
+class ConcreteBird : public AbstractBird {
+public:
+    void speak() override {  // 在这里实现
+        cout << "叽叽喳喳！" << endl;
+    }
+};
+
+int main() {
+    Dog dog;
+    dog.speak();  // 汪汪！
+    dog.eat();    // 动物在吃东西（使用父类默认实现）
+    
+    Cat cat;
+    cat.speak();  // 喵喵！
+    cat.eat();    // 猫在吃鱼（使用子类重写）
+    
+    // AbstractBird bird;  // ❌ 错误：抽象类不能实例化
+    // bird.speak();       // 因为没有实现speak()
+    
+    ConcreteBird bird;
+    bird.speak();  // 叽叽喳喳！
+    bird.fly();    // 鸟儿在飞
+    
+    return 0;
+}
+```
+
+
+
+##### 运算符重载
+
+所谓重载，就是赋予新的含义。函数重载（Function Overloading）可以让一个函数名有多种功能，在不同情况下进行不同的操作。运算符重载（Operator Overloading）也是一个道理，同一个运算符可以有不同的功能。
+
+- 运算符重载是通过函数实现的，它本质上是函数重载。
+
+允许重载的运算符
+
+![image-20251219120047479](assets/image-20251219120047479.png)
+
+不允许重载的运算符
+
+![image-20251219120125393](assets/image-20251219120125393.png)
+
+###### 定义
+
+重载运算符遵循的规则：
+
+- 不可以自己定义新的运算符，只能对已有的C++运算符重载。
+- 不能改变运算符运算对象的个数。
+- 不能改变运算符的优先级和结合性
+- 应与标准类型运算功能相似，避免影响可读性。
+  一般格式：
+
+```c++
+函数类型 operator运算符(参数列表)
+{
+	函数体
+}
+//举个例子：定义一个向量类，通过运算符重载，可以用+进行运算。
+class Vector3
+{
+public:
+	Vector3();
+	Vector3(double x,double y,double z);
+public:
+	Vector3 operator+(const Vector3 &A)const;
+	void display()const;
+private:
+	double m_x;
+	double m_y;
+	double m_z;
+};
+Vector3::Vector3() :m_x(0.0), m_y(0.0), m_z(0.0) {}
+Vector3::Vector3(double x, double y,double z) : m_x(x), m_y(y), m_z(z) {}
+//运算符重载
+Vector3 Vector3::operator+(const Vector3 &A) const
+{
+	Vector3 B;
+	B.m_x = this->m_x + A.m_x;
+	B.m_y = this->m_y + A.m_y;
+	B.m_z = this->m_z + A.m_z;
+	return B;
+}
+void  Vector3::display()const
+{
+	cout<<"(" << m_x << "," << m_y << "," << m_z << ")" << endl;
+}
+
+```
+
+###### 加号运算符重载
+
+作用：实现两个自定义数据类型相加的运算
+
+```c++
+返回类型 operator运算符符号(参数列表) {
+    // 实现
+}
+```
+
+**1.通过自己写成员函数，实现两个对象相加属性后返回新的对象**
+
+```c++
+#include <iostream> 
+using namespace std;
+
+class Person{
+    public:
+        int m_a;
+        int m_b;
+        Person operator+(Person &p){
+            Person temp;
+            temp.m_a = this->m_a + p.m_a;
+            temp.m_b = this->m_b + p.m_b;
+            return temp;
+        }
+};
+
+int main(){
+    Person p1;
+    p1.m_a = 10;
+    p1.m_b = 20;
+
+    Person p2;
+    p2.m_a = 30;
+    p2.m_b = 40;
+
+    Person p3 = p1 + p2;
+    cout << "p3.m_a = " << p3.m_a << endl; //40
+    cout << "p3.m_b = " << p3.m_b << endl; //60
+
+    return 0;
+}
+```
+
+**2.通过全局函数重载+**
+
+```c++
+#include <iostream> 
+using namespace std;
+
+class Person{
+    public:
+        int m_a;
+        int m_b;
+};
+//定义在类外
+Person operator+ (Person p,Person p2){
+        Person temp;
+        temp.m_a=p.m_a  + p2.m_a;
+        temp.m_b=p.m_b  + p2.m_b;
+        return temp;
+    }
+
+int main(){
+    Person p1;
+    p1.m_a=10;
+    p1.m_b=20;
+
+    Person p2;
+    p2.m_a=30;
+    p2.m_b=40;
+
+    Person p3=p1 + p2;
+
+    cout<<"p3.m_a="<<p3.m_a<<endl;//10+30
+    cout<<"p3.m_b="<<p3.m_b<<endl;//20+40
+
+    return 0;
+}
+```
+
+###### 左移运算符重载
+
+利用成员函数重载左移运算符 p.operator<<(cout) 简化版本 p<< cout，不会利用成员函数重载<<运算符，因为无法实现cout在左侧
+
+只能利用全局函数重载左移运算符
+
+```c++
+#include <iostream> 
+using namespace std;
+
+class Person{
+    public:
+        int m_a;
+        int m_b;
+};
+Person operator<< (ostream &cout,Person &p){
+        cout << p.m_a << " " << p.m_b << endl;
+    }
+
+int main(){
+    Person p;
+    p.m_a = 10;
+    p.m_b = 20;
+    cout << p; //10 20
+    return 0;
+}
+```
+
+###### 递增运算符重载
+
+通过重载递增运算符，实现自己的整型数据
+
+```c++
+#include <iostream> 
+using namespace std;
+
+class MyInteger {
+    public:
+        int value;
+    MyInteger(){
+        value = 0;
+    }
+    //前置
+    MyInteger& operator++(){
+        value++;
+        return *this;
+    }
+    //后置
+    MyInteger operator++(int){
+        MyInteger temp = *this;
+        value++;
+        return temp;
+    }   
+};
+ostream & operator<<(ostream &out, const MyInteger &mi){
+    out << mi.value;
+    return out;
+}
+
+int main(){
+    MyInteger a;
+    cout << "初始值a = " << a << endl;
+
+    MyInteger b = ++a; //前置++
+    cout << "前置++后，a = " << a << ", b = " << b << endl;
+
+    MyInteger c = a++; //后置++
+    cout << "后置++后，a = " << a << ", c = " << c << endl;
+
+    return 0;
+}
+```
+
+> [!NOTE]
+>
+> ###### 赋值运算符重载
+
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+
+class Person
+{
+public:
+    int  *m_age;
+    Person(int age)
+    {
+        m_age = new int(age);
+
+    }
+    void operator=(Person &p){
+        if(m_age != NULL)
+        {
+            delete m_age;
+            m_age = NULL;
+        }
+        m_age = new int(*p.m_age);
+    }
+    ~Person()
+    {
+        if (m_age != NULL)
+        {
+            delete m_age;
+            m_age = NULL;
+        }
+    }
+};
+
+void test01(){
+    Person p1(18);
+    Person p2(20);
+    p2 = p1;
+}
+
+int main()
+{
+    test01();
+
+}
+```
+
+###### 实现类型转化
+
+- 不指定函数类型和参数，返回值的类型由类型名来确定。
+- 类型转换函数只能作为成员函数，不能作为友元函数。
+  类型转换函数的一般形式：
+
+```c++
+operator 类型名()
+{
+	转换语句;
+}
+class Vector3
+{
+public:
+	Vector3();
+	Vector3(double x,double y,double z);
+public:
+	Vector3 operator+(const Vector3 &A)const;
+	Vector3 operator++();
+	friend Vector3 operator-(const Vector3 &v1, const Vector3 &v2);
+	friend Vector3 operator--(Vector3 &v,int);
+	operator double()
+	{
+		return m_x + m_y + m_z;
+	}
+	void display()const;
+private:
+	double m_x;
+	double m_y;
+	double m_z;
+};
+int main()
+{
+	Vector3 v1(1, 2, 3);
+	double d = v1;
+	cout << d << endl;//6
+	return 0;
+}
+
+```
+
+##### 文件操作
+
+<img src="assets/image-20251219171533343.png" alt="image-20251219171533343" style="zoom:50%;" />
 
