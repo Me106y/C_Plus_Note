@@ -2748,7 +2748,752 @@ int main()
 
 ```
 
+##### IO流
+
+###### 流类和对象
+
+C++的输入/输出流库(iostream)中定义了4个标准流对象：cin(标准输入流-键盘)，cout(标准输出流-屏幕)，cerr(标准错误流-屏幕)，clog(标准错误流-屏幕)
+
+cerr 不使用缓冲区，直接向显示器输出信息；而输出到 clog 中的信息会先被存放到缓冲区，缓冲区满或者刷新时才输出到屏幕。
+cout 是 ostream 类的对象，ostream 类的无参构造函数和复制构造函数都是私有的，所以无法定义 ostream 类的对象。
+使用>>提取数据时，系统会跳过空格，制表符，换行符等空白字符。所以一组变量输入值时，可用这些隔开。
+输入字符串，也是跳过空白字符，会在串尾加上字符串结束标志\0。
+
+> [!IMPORTANT]
+>
+> *clog*流也是标准错误流,作用和cerr一样,区别在于cerr不经过缓冲区,直接向显示器输出信息,而clog中的信息存放在缓冲区,缓冲区满或者遇到endl时才输出。 clog是cerr的缓冲版本
+
+```c++
+int  x;
+double y;
+cin>>x>>y;
+//输入 22 66.0  两个数之间可以用空格、制表符和回车分隔数据
+char str[10];
+cin>>str;//hei ren  字符串中只有hei\0
+```
+
+输入流中的成员函数
+
+- get函数：cin.get()，cin.get(ch)（成功返回非0值，否则返回0），cin.get(字符数组(或字符指针)，字符个数n,终止字符)
+
+```c++
+char c = cin.get();//获取一个字符
+while ((c = cin.get()) != EOF)//循环读取，直到换行
+{
+	cout << c;
+}
+
+
+char ch;
+cin.get(ch);
+while (cin.get(ch))//读取成功循环
+{
+	cout << ch;
+}
+
+char arr[5];
+cin.get(arr, 5, '\n');//输入 heiren  结果 heir\0
+
+```
+
+- getline函数：cin.getline(字符数组(或字符指针),字符个数n,终止标志字符)
+  读取字符知道终止字符或者读取n-1个字符，赋值给指定字符数组（或字符指针）
+
+```c++
+char arr0[30],arr1[30],arr2[40];
+cin>>arr0;//遇到空格、制表符或回车结束  "Heiren"
+cin.getline(arr1,30);//字符数最多为29个，遇到回车结束 " Hello World"
+cin.getline(arr2,40,'*');//最多为39个，遇到*结束 "yar"
+//输入 Heiren Hello World
+//yar*123
+```
+
+- cin.peek() 不会跳过输入流中的空格、回车符。在输入流已经结束的情况下，cin.peek() 返回 EOF。
+- ignore(int n =1, int delim = EOF)
+
+```c++
+int n;
+ cin.ignore(5, 'Y');//跳过前5个字符或Y之前的字符，‘Y’优先
+ cin >> n;
+ //输入1234567  ->  67    1234567Y345->345
+
+//输入2020.2.23
+int year,month,day;
+cin >> year ;
+cin.ignore() >> month ; //用ignore跳过 '.'
+ cin.ignore() >> day;
+cin.ignore();   //跳过行末 '\n'
+
+ cout<< setfill('0') << setw(2) << month ;//设置填充字符'\0'，输出宽度2
+ cout << "-" << setw(2) << day << "-" << setw(4) << year << endl;
+
+```
+
+- putback(char c)，可以将一个字符插入输入流的最前面。
+
+输出流对象
+
+- 插入endl-输出所有数据，插入换行符，清空缓冲区
+- \n-输出换行，不清空缓冲区
+- cout.put(参数) 输出单个字符（可以时字符也可以是ASII码）
+
+
+
 ##### 文件操作
 
 <img src="assets/image-20251219171533343.png" alt="image-20251219171533343" style="zoom:50%;" />
+
+###### 文本文件-写文件
+
+写文件的步骤如下：
+
+```c++
+1.包含头文件
+#include<fstream>
+2.创建流对象
+ofstream ofs;
+3.打开文件
+ofs.open("文件路径",打开方式);
+4.写数据
+ofs<<"写入的数据";
+5.关闭文件
+ofs.close()
+```
+
+```c++
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+void test(){
+    ofstream ofs;
+    ofs.open("example.txt", ios::out);
+    ofs<<"Hello, World!"<<endl;
+    ofs.close();
+}
+
+int main(){
+    test();
+    return 0;
+}
+```
+
+###### 文本文件-读文件
+
+读文件的步骤如下：
+
+```c++
+1.包含头文件
+#include<fstream>
+2.创建流对象
+ifstream ifs;
+3.打开文件并判断文件是否打开成功
+ifs.open("文件路径",打开方式);
+4.读文件
+四种方式读取
+5.关闭文件
+ifs.close()
+```
+
+```c++
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+void test(){
+    ifstream ifs;
+    ifs.open("example.txt", ios::in);
+    if (!ifs.is_open()){
+        cout << "读取文件错误" << endl;
+        return;
+    }
+    //读数据
+    // 第一种
+    // char buf[1024]={0};
+    // while (ifs>>buf)
+    // {
+    //     cout<<buf<<endl;
+    // }
+
+    //第二种
+    // char buf[1024]={0};
+    // while (ifs.getline(buf,sizeof(buf)))
+    // {
+    //     cout<<buf<<endl;
+    // }
+
+    //第三种
+    // string buf;
+    // while (getline(ifs,buf))
+    // {
+    //     cout<<buf<<endl;
+    // }
+
+    //第四种
+    char c;
+    while((c=ifs.get()!=EOF)){
+        cout<<c;
+    }
+
+    ifs.close();
+}
+
+int main(){
+    test();
+    return 0;
+}
+```
+
+###### 二进制文件-写文件
+
+以二进制的方式对文件进行读写操作
+
+打开方式要指定为==ios::binary==
+
+二进制方式写文件主要利用流对象调用成员函数write
+
+函数原型：ostream&write(const char*buffer,int len);
+
+参数解释：字符指针buffer指向内存中一段存储空间。len是读写的字节数
+
+对文件操作最好不用使用string，可以使用char数组
+
+```c++
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+class Person{
+    public:
+        string name;
+        int age;
+        Person(string="123",int=10);
+};
+Person::Person(string n,int a):name(n),age(a){
+    cout << name << " " << age <<endl;
+}
+
+void test(){
+    ofstream ofs("person.txt",ios::out|ios::binary);
+    Person p("zhangsan",18);
+    ofs.write((const char*)&p,sizeof(Person));
+    ofs.close();
+}
+
+int main(){
+    test();
+    return 0;
+}
+
+```
+
+######  二进制文件-读文件
+
+二进制方式读文件主要利用流对象调用成员函数read
+
+函数原型：istream&read(char*buffer,int len);
+
+参数解释：字符指针buffer指向内存中一段存储空间。len是读写的字节数
+
+```c++
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+class Person{
+    public:
+        string name;
+        int age;
+        Person(string="123",int=10);
+};
+Person::Person(string n,int a):name(n),age(a){
+
+}
+
+void test(){
+    ifstream ifs("person.txt",ios::in|ios::binary);
+    Person p;
+    ifs.read((char*)&p,sizeof(Person));
+    cout << p.name << " " << p.age << endl;
+    ifs.close();
+}
+
+int main(){
+    test();
+    return 0;
+}
+
+```
+
+##### 泛型和模版
+
+- 泛型程序设计在实现时不指定具体要操作的数据的类型的程序设计方法的一种算法，指的是算法只要实现一遍，就能适用于多种数据类型，优势在于代码复用，减少重复代码的编写。
+- 模板是泛型的基础，是创建泛型类或函数的蓝图或公式。
+
+###### 函数模版
+
+函数模板的一般形式：
+
+```c++
+template<class T>或template<typename T>
+函数类型 函数名(参数列表)
+{
+	函数体;
+}
+template<class T1,class T2,...>//class可以换成typename
+函数类型 函数名(参数列表)
+{
+	函数体;
+}
+```
+
+```c++
+#include <iostream>
+using namespace std;
+
+void swapInt(int &a, int &b){
+    int temp = a;
+    a = b;
+    b = temp;
+}
+
+template <typename T> //typename可以替换为class
+void mySwap(T &a, T &b){
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+int main(){
+    int x = 10;
+    int y = 20;
+    // cout << "Before swap: x = " << x << ", y = " << y << endl;
+    // swapInt(x, y);
+    // cout << "After swap: x = " << x << ", y = " << y << endl;
+    // 1.自动退到类型
+    // cout << "Before swap: x = " << x << ", y = " << y << endl;
+    // mySwap(x, y);
+    // cout << "After swap: x = " << x << ", y = " << y << endl;
+    // 2.直接指定类型
+    cout << "Before swap: x = " << x << ", y = " << y << endl;
+    mySwap<int>(x, y);
+    cout << "After swap: x = " << x << ", y = " << y << endl;
+
+    return 0;
+}
+```
+
+> [!IMPORTANT]
+>
+> 自动推导类型，必须推导出一致的数据类型T，才可以使用
+>
+> 模版必须要确定出T的数据类型，才可以使用
+>
+> **普通函数和函数模版的区别**
+>
+> - 普通函数调用时可以发生自动类型转换（隐式类型转换）
+> - 函数模版调用时，如果利用自动类型推导，不会发生隐式类型转换
+> - 如果利用显式指定类型的方式，可以发生隐式类型转换
+
+
+
+###### 普通函数和函数模版的调用规则
+
+> [!IMPORTANT]
+>
+> - 如果函数模版和普通函数都可以实现，优先调用普通函数
+> - 可以通过空模版参数列表来强制调用函数模版
+> - 函数模版也可以发生重载
+> - 如果函数模版可以产生更好的匹配，优先调用函数模版
+>
+> ```c++
+> #include <iostream>
+> using namespace std;
+> 
+> void myPrint(){
+>     cout << "调用的普通函数" << endl;
+> }
+> 
+> template<typename T>
+> void myPrint(T a){
+>     cout << "调用的模板函数" << a << endl;
+> }
+> 
+> int main(){
+>     myPrint();
+>     return 0;
+> }
+> ```
+>
+> ![image-20251223171257707](assets/image-20251223171257707.png)
+>
+> ```
+> #include <iostream>
+> using namespace std;
+> 
+> void myPrint(int a=0){
+>     cout << "调用的普通函数" << endl;
+> }
+> 
+> template<typename T>
+> void myPrint(T a){
+>     cout << "调用的模板函数" << endl;
+> }
+> 
+> int main(){
+>     int a = 10;
+>     myPrint<>(a);
+>     return 0;
+> }
+> 
+> ```
+>
+> 强制调用模版：
+>
+> ![image-20251223171902932](assets/image-20251223171902932.png)
+>
+> ```c++
+> #include <iostream>
+> using namespace std;
+> 
+> void myPrint(int a=0){
+>     cout << "调用的普通函数" << endl;
+> }
+> 
+> template<typename T>
+> void myPrint(T a){
+>     cout << "调用的模板函数" << endl;
+> }
+> 
+> template<typename T>
+> void myPrint(T a,T b){
+>     cout << "调用的模板函数2" << endl;
+> }
+> 
+> int main(){
+>     int a = 10, b = 20;
+>     myPrint<>(a, b);
+>     return 0;
+> }
+> 
+> ```
+>
+> 模版函数重载
+>
+> ![image-20251223172214476](assets/image-20251223172214476.png)
+>
+> ```c++
+> #include <iostream>
+> using namespace std;
+> 
+> void myPrint(int a){
+>     cout << "调用的普通函数" << endl;
+> }
+> 
+> template<typename T>
+> void myPrint(T a){
+>     cout << "调用的模板函数" << endl;
+> }
+> 
+> 
+> int main(){
+>     char a = 'a';
+>     myPrint(a);
+>     return 0;
+> }
+> ```
+>
+> 如果函数模版可以产生更好的匹配，优先调用函数模版
+>
+> 这里普通函数需要隐式转换，而模版函数只需要推导函数类型
+
+
+
+###### 模版的局限性
+
+> [!IMPORTANT]
+>
+> 函数的通用性并不是万能的
+>
+> ```c++
+> template<class T>
+> void f(T a,T b){
+> 		a=b;
+> }
+> ```
+>
+> 在上述代码中提供的赋值操作，如果传入的a和b是一个数组就无法实现了
+>
+> ```c++
+> template<class T>
+> void f(T a, T b){
+> 		if(a>b){...}
+> }
+> ```
+>
+> 如果T的数据类型传入的是像Person这样的自定义数据类型也无法正常运行
+>
+> 为解决这种问题，提供模版的重载，可以为这些特定的类型提供具体化的模版
+>
+> ```c++
+> #include <iostream>
+> using namespace std;
+> 
+> class Person {
+> public:
+>     int age;   
+>     Person(int a) : age(a) {}
+> };
+> 
+> template <typename T>
+> void myCompare(T a, T b){
+>     if(a > b){
+>         cout << a << " is greater than " << b << endl;      
+>     } else if(a < b){
+>         cout << a << " is less than " << b << endl;
+>     } else {
+>         cout << a << " is equal to " << b << endl;
+>     }
+> }
+> 
+> template <>
+> void myCompare<Person>(Person a, Person b){
+>     if (a.age>b.age) {
+>         cout << a.age << " is greater than " << b.age << endl;
+>     } else if (a.age<b.age) {
+>         cout << a.age << " is less than " << b.age << endl;
+>     } else {
+>         cout << a.age << " is equal to " << b.age << endl;
+>     }
+> }
+> 
+> 
+> 
+> int main(){
+>     myCompare(10, 20);          // Comparing integers
+>     Person p1(25), p2(30);
+>     myCompare(p1, p2);  // 不进行重载会报错
+>     return 0;
+> }
+> 
+> ```
+
+
+
+###### 类模版
+
+类模版作用：
+
+建立一个通用类，类中的成员数据类型可以不具体制定，用一个虚拟的类型来代表
+
+```c++
+template<typename T>
+类
+```
+
+解释：
+
+template --- 声明创建模版
+
+typename --- 表明其后面的符号是一种数据类型，可以用class代替
+
+T --- 通用的数据类型，名称可以替换，通常为大写字母
+
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <class NameType, class AgeType>
+class Person {
+public:
+    NameType name;
+    AgeType age;
+    Person(NameType n, AgeType a) : name(n), age(a) {}
+    void display() {
+        cout << "Name: " << name << ", Age: " << age << endl;
+    }
+};
+
+int main() {
+    Person<string, int> person1("Alice", 30);
+    person1.display();
+
+    return 0;
+}
+
+```
+
+###### 类模版与函数模版的区别
+
+类模版与函数模版区别主要有两点
+
+- 类模版没有自动类型推导的使用方式
+- 类模版在模版参数列表中可以有默认参数
+
+```c++
+tenplate<class NameType,class AgeType=int>
+```
+
+
+
+###### 类模版中成员函数创建时机
+
+类模版中成员函数和普通类中成员函数创建时机是有区别的；
+
+- 普通类中的成员函数一开始就可以创建
+- 类模版中的成员函数在调用时才创建
+
+  
+
+###### 类模版对象做函数参数
+
+共有三种传入方式：
+
+- 指定传入的类型 ---直接显示对象的数据类型
+- 参数模版化         ---将对象中的参数变为模版进行传递
+- 整个类模版化     ---将这个对象类型模版化进行传递
+
+```c++
+// 1.直接指定传入的类型
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <class NameType, class AgeType>
+class Person {
+public:
+    NameType name;
+    AgeType age;
+    Person(NameType n, AgeType a) : name(n), age(a) {}
+    void display() {
+        cout << "Name: " << name << ", Age: " << age << endl;
+    }
+};
+
+void printPerson(Person<string, int> p) {
+    p.display();
+}
+
+void test01(){
+    Person<string, int> p1("Alice", 30);
+    printPerson(p1);
+}
+
+int main() {
+    test01();
+    return 0;
+}
+```
+
+```c++
+//2.参数模版化
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <class NameType, class AgeType>
+class Person {
+public:
+    NameType name;
+    AgeType age;
+    Person(NameType n, AgeType a) : name(n), age(a) {}
+    void display() {
+        cout << "Name: " << name << ", Age: " << age << endl;
+    }
+};
+template <class T1, class T2>
+void printPerson(Person<T1, T2> p) {
+    p.display();
+}
+
+void test02(){
+    Person<string, int> p1("Alice", 30);
+    printPerson(p1);
+}
+
+int main() {
+    test02();
+    return 0;
+}
+
+```
+
+```c++
+//3.将整个类模版化
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <class NameType, class AgeType>
+class Person {
+public:
+    NameType name;
+    AgeType age;
+    Person(NameType n, AgeType a) : name(n), age(a) {}
+    void display() {
+        cout << "Name: " << name << ", Age: " << age << endl;
+    }
+};
+template <class T>
+void printPerson(T p) {
+    p.display();
+}
+
+void test03(){
+    Person<string, int> p1("Alice", 30);
+    printPerson(p1);
+}
+
+int main() {
+    test03();
+    return 0;
+}
+```
+
+
+
+###### 类模版与继承
+
+当类模版碰到继承时，需要注意一下几点：
+
+- 当子类继承的父类是一个类模版时，子类在声明的时候，要指定父类中T的类型
+- 如果不指定，编译器无法给子类分配内存
+- 如果想灵活指定出父类中T的类型，子类也需变为类模版
+
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <typename T>
+class Person{
+    public:
+        T name;
+        Person(T name) : name(name) {  }
+};
+// 1.子类在声明的时候，要指定父类中T的类型
+class Son1 : public Person<string>{
+    public:
+        Son1(string name) : Person<string>(name) {  }
+};
+// 2.子类也可以是模板类
+template <typename T>
+class Son2 : public Person<T>{
+    public:
+        Son2(T name) : Person<T>(name) {  }
+};
+
+int main() {
+    Son1 son1("Son1_Name");
+    cout << "Son1's name: " << son1.name << endl;
+    Son2<string> son2("Son2_Name");// 指定T为string
+    cout << "Son2's name: " << son2.name << endl;
+    return 0;
+}
+```
+
+
+
+###### 类模版成员函数类外实现
 
