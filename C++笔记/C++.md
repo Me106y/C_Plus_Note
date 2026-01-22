@@ -1640,7 +1640,7 @@ class xxx
 
 ###### 友元
 
-借助友元(friend)，可以使得其他类中得成员函数以及全局范围内得函数访问当前类的private成员。
+借助友元(friend)，可以使得其他类中得成员函数以及全局范围内的函数访问当前类的private成员。
 友元函数
 
 - 友元函数不是类的成员函数，所以没有this指针，必须通过参数传递对象。
@@ -3497,3 +3497,138 @@ int main() {
 
 ###### 类模版成员函数类外实现
 
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <typename T>
+class Person{
+    public:
+        T name;
+        Person(T name);
+        void showPerson(T name);
+};
+//类外实现成员函数
+template <typename T>
+void Person<T>::showPerson(T name){
+    cout << "Person name is: " << name << endl;
+}  
+//类外实现构造函数
+template <typename T>
+Person<T>::Person(T name) : name(name) {
+    cout << "Constructor called for: " << name << endl;
+}
+
+int main() {
+    Person<string> person1("Alice");
+    person1.showPerson(person1.name);
+    return 0;
+}
+
+```
+
+
+
+###### 类模版分文件编写
+
+解决方案1:直接包含cpp源文件
+
+==解决方案2:将声明和实现写到同一个文件中，并更改后缀为hpp，hpp是约定的名称，而不是强制的==
+
+**Person.hpp**
+
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <typename T>
+class Person{
+    public:
+        T name;
+        Person(T name);
+        void showPerson(T name);
+};
+template <typename T>
+void Person<T>::showPerson(T name){
+    cout << "Person name is: " << name << endl;
+}  
+
+template <typename T>
+Person<T>::Person(T name) : name(name) {
+    cout << "Constructor called for: " << name << endl;
+}
+```
+
+**main.cpp**
+
+```c++
+#include <iostream>
+#include <string>
+#include "Person.hpp"
+using namespace std;
+
+
+int main() {
+    Person<string> person1("Alice");
+    person1.showPerson(person1.name);
+    return 0;
+}
+```
+
+注意只能有一个主函数
+
+![image-20251224191512066](assets/image-20251224191512066.png)
+
+
+
+###### 类模版和友元
+
+全局函数类内实现 - 直接在类内声明友元即可
+
+全局函数类内实现 - 需要提前让编译器知道全局函数的存在
+
+```c++
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+template <typename T>
+class Person; //前置声明
+
+template <typename T>
+void showPerson2(Person<T> p){
+    cout << "Person name is: " << p.name << endl;
+    cout << "友元函数类外实现" << endl;
+}
+
+template <typename T>
+class Person{
+    public:
+        Person(T name){
+            this->name = name;
+        }
+        //友元函数类内实现
+        friend void showPerson1(Person<T> p){
+            cout << "Person name is: " << p.name << endl;
+            cout << "友元函数类内实现" << endl;
+        }
+        friend void showPerson2<>(Person<T> p); //友元函数类外实现声明
+        private:
+            T name;
+};
+
+
+int main() {
+    Person<string> person1("Alice");
+    showPerson1(person1);
+    showPerson2(person1);
+    return 0;
+}
+```
+
+![image-20251225112132349](assets/image-20251225112132349.png)
+
+##### STL
